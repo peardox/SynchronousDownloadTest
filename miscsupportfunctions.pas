@@ -44,11 +44,13 @@ type
     cardname: String;
     setcode: String;
     cardtype: String;
+    cardlayout: String;
     cardnum: String;
     side: String;
     rarity: String;
     scryfall: String;
     hasprice: Boolean;
+    created: Int64;
   end;
   TFileDetailsArray = Array of TFileDetail;
 
@@ -59,9 +61,8 @@ type
   end;
 
 const
-  FILELIST_URI = 'https://api.peardox.co.uk/cards.php';
+  FILELIST_URI = 'https://api.peardox.co.uk/cards.php?setcode=UNH';
 
-function JSONKindToString(Node: TJsonNode): string;
 procedure MapJsonObject(Json: TJsonNode);
 function CreateFormat(Json: TJsonNode): TFormat;
 function CreateSource(Json: TJsonNode): TSource;
@@ -75,11 +76,6 @@ implementation
 
 uses
   Unit1; // For DebugMessage
-
-function JSONKindToString(Node: TJsonNode): string;
-begin
-  result := GetEnumName(TypeInfo(TJsonNodeKind), ord(Node.&Kind));
-end;
 
 procedure MapJsonObject(Json: TJsonNode);
 var
@@ -97,10 +93,10 @@ begin
           begin
             Txt := Chr(39) + Node.Name + Chr(39) + ':' + LineEnding +
             '  begin' + LineEnding +
-            '    if not(Node.Kind = ' + JSONKindToString(Node) + ') then' + LineEnding +
+            '    if not(Node.Kind = ' + Node.KindAsString + ') then' + LineEnding +
             '      DebugMessage(' + Chr(39) +  'TypeError for ' +
-              Node.Name + ' expected '  + JSONKindToString(Node) +
-              ' got ' + Chr(39) + ' + JSONKindToString(Node)' + ')' + LineEnding +
+              Node.Name + ' expected '  + Node.KindAsString +
+              ' got ' + Chr(39) + ' + Node.KindAsString' + ')' + LineEnding +
             '    else' + LineEnding;
             if Node.Kind = nkString then
               Txt += '      Rec.' + Node.Name + ' := Node.AsString;' + LineEnding
@@ -133,19 +129,19 @@ begin
         'width':
           begin
             if not(Node.Kind = nkNumber) then
-              DebugMessage('TypeError for width expected nkNumber got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for width expected nkNumber got ' + Node.KindAsString)
             else
               Rec.width := Trunc(Node.AsNumber);
           end;
         'height':
           begin
             if not(Node.Kind = nkNumber) then
-              DebugMessage('TypeError for height expected nkNumber got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for height expected nkNumber got ' + Node.KindAsString)
             else
               Rec.height := Trunc(Node.AsNumber);
           end;
         else
-          DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+          DebugMessage('Unexpected data in CreateFormat - ' + Node.Name + ' -> ' + Node.KindAsString);
       end;
     end;
   Result := Rec;
@@ -163,68 +159,68 @@ begin
         'protocol':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for protocol expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for protocol expected nkString got ' + Node.KindAsString)
             else
               Rec.protocol := Node.AsString;
           end;
         'server':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for server expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for server expected nkString got ' + Node.KindAsString)
             else
               Rec.server := Node.AsString;
           end;
         'path':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for path expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for path expected nkString got ' + Node.KindAsString)
             else
               Rec.path := Node.AsString;
           end;
         'key':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for key expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for key expected nkString got ' + Node.KindAsString)
             else
               Rec.key := Node.AsString;
           end;
         'mimetype':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for mimetype expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for mimetype expected nkString got ' + Node.KindAsString)
             else
               Rec.mimetype := Node.AsString;
           end;
         'append':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for append expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for append expected nkString got ' + Node.KindAsString)
             else
               Rec.append := Node.AsString;
           end;
         'format':
           begin
             if not(Node.Kind = nkObject) then
-              DebugMessage('TypeError for format expected nkObject got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for format expected nkObject got ' + Node.KindAsString)
             else
               Rec.format := CreateFormat(Node);
           end;
         'local':
           begin
             if not(Node.Kind = nkBool) then
-              DebugMessage('TypeError for local expected nkBool got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for local expected nkBool got ' + Node.KindAsString)
             else
               Rec.local := Node.AsBoolean;
           end;
         'notes':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for notes expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for notes expected nkString got ' + Node.KindAsString)
             else
               Rec.notes := Node.AsString;
           end;
         else
-          DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+          DebugMessage('Unexpected data in CreateSource- ' + Node.Name + ' -> ' + Node.KindAsString);
       end;
     end;
   Result := Rec;
@@ -242,40 +238,40 @@ begin
         'protocol':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for protocol expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for protocol expected nkString got ' + Node.KindAsString)
             else
               Rec.protocol := Node.AsString;
           end;
         'server':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for server expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for server expected nkString got ' + Node.KindAsString)
             else
               Rec.server := Node.AsString;
           end;
         'ratelimit':
           begin
             if not(Node.Kind = nkNumber) then
-              DebugMessage('TypeError for ratelimit expected nkNumber got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for ratelimit expected nkNumber got ' + Node.KindAsString)
             else
               Rec.ratelimit := Trunc(Node.AsNumber);
           end;
         'error_code':
           begin
             if not(Node.Kind = nkNumber) then
-              DebugMessage('TypeError for error_code expected nkNumber got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for error_code expected nkNumber got ' + Node.KindAsString)
             else
               Rec.error_code := Trunc(Node.AsNumber);
           end;
         'notes':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for notes expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for notes expected nkString got ' + Node.KindAsString)
             else
               Rec.notes := Node.AsString;
           end;
         else
-          DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+          DebugMessage('Unexpected data in CreateLimit - ' + Node.Name + ' -> ' + Node.KindAsString);
       end;
     end;
   Result := Rec;
@@ -293,68 +289,82 @@ begin
         'uuid':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for uuid expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for uuid expected nkString got ' + Node.KindAsString)
             else
               Rec.uuid := Node.AsString;
           end;
         'cardname':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for cardname expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for cardname expected nkString got ' + Node.KindAsString)
             else
               Rec.cardname := Node.AsString;
           end;
         'setcode':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for setcode expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for setcode expected nkString got ' + Node.KindAsString)
             else
               Rec.setcode := Node.AsString;
           end;
         'cardtype':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for cardtype expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for cardtype expected nkString got ' + Node.KindAsString)
             else
               Rec.cardtype := Node.AsString;
+          end;
+        'cardlayout':
+          begin
+            if not(Node.Kind = nkString) then
+              DebugMessage('TypeError for cardlayout expected nkString got ' + Node.KindAsString)
+            else
+              Rec.cardlayout := Node.AsString;
           end;
         'cardnum':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for cardnum expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for cardnum expected nkString got ' + Node.KindAsString)
             else
               Rec.cardnum := Node.AsString;
           end;
         'side':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for side expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for side expected nkString got ' + Node.KindAsString)
             else
               Rec.side := Node.AsString;
           end;
         'rarity':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for rarity expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for rarity expected nkString got ' + Node.KindAsString)
             else
               Rec.rarity := Node.AsString;
           end;
         'scryfall':
           begin
             if not(Node.Kind = nkString) then
-              DebugMessage('TypeError for scryfall expected nkString got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for scryfall expected nkString got ' + Node.KindAsString)
             else
               Rec.scryfall := Node.AsString;
           end;
         'hasprice':
           begin
             if not(Node.Kind = nkNumber) then
-              DebugMessage('TypeError for hasprice expected nkNumber got ' + JSONKindToString(Node))
+              DebugMessage('TypeError for hasprice expected nkNumber got ' + Node.KindAsString)
             else
               Rec.hasprice := Node.AsBoolean;
           end;
+        'created':
+          begin
+            if not(Node.Kind = nkNumber) then
+              DebugMessage('TypeError for created expected nkNumber got ' + Node.KindAsString)
+            else
+              Rec.created := Trunc(Node.AsNumber);
+          end;
         else
-          DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+          DebugMessage('Unexpected data in CreateFileDetail - ' + Node.Name + ' -> ' + Node.KindAsString);
       end;
     end;
   Result := Rec;
@@ -376,7 +386,7 @@ begin
         begin
           if Node.Kind = nkArray then
             begin
-              DebugMessage(Node.Name + ' -> ' + JSONKindToString(Node) +
+              DebugMessage(Node.Name + ' -> ' + Node.KindAsString +
                 ' has ' + IntToStr(Node.Count) + ' records');
               case Node.Name of
                 'source':
@@ -407,12 +417,12 @@ begin
                   end;
                 else
                   begin
-                    DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+                    DebugMessage('Unexpected data in ExtractJsonData - ' + Node.Name + ' -> ' + Node.KindAsString);
                   end;
               end;
             end
           else
-            DebugMessage('Unexpected data - ' + Node.Name + ' -> ' + JSONKindToString(Node));
+            DebugMessage('Unexpected data in ExtractJsonData - ' + Node.Name + ' -> ' + Node.KindAsString);
         end;
     except
       on E : Exception do
@@ -486,6 +496,7 @@ begin
           DebugMessage('CardName    : ' + cardname);
           DebugMessage('SetCode     : ' + setcode);
           DebugMessage('CardType    : ' + cardtype);
+          DebugMessage('CardLayout  : ' + cardlayout);
           DebugMessage('CardNumber  : ' + cardnum);
           DebugMessage('CardSide    : ' + side);
           DebugMessage('Rarity      : ' + rarity);
@@ -494,6 +505,7 @@ begin
             DebugMessage('HasPrice    : Yes')
           else
             DebugMessage('HasPrice    : No');
+          DebugMessage('Created     : ' + IntToStr(created));
         end;
       DebugMessage('================');
     end;
